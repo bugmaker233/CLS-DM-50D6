@@ -17,7 +17,7 @@ from dataset.monai_nii_dataset1 import AlignDataSet
 from lightning.pytorch.strategies import DDPStrategy
 from omegaconf import OmegaConf
 
-# torch.set_float32_matmul_precision("high")  
+torch.set_float32_matmul_precision("high")
 
 
 @hydra.main(config_path="../conf", config_name="config", version_base="1.3")

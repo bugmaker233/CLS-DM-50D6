@@ -26,7 +26,7 @@ dis_datasetfile: "./data/dis.txt"
 output_dir : "./logs/${config.name}"  # the traning logs saved
   
 model:
-  base_learning_rate: 0.0001  #zhougu 0.00001 others: 0.0001
+  base_learning_rate: 5.0e-5  # conservative default for 1x4090 with bs=1
   sync_dist: True
   # params:
   monitor: "val/rec_loss"
@@ -57,7 +57,7 @@ model:
 
 trainer:
   benchmark: True
-  # accumulate_grad_batches: 2
+  accumulate_grad_batches: 8
   # single-GPU default; override at runtime as needed
   devices: [0]
   accelerator: "auto"
