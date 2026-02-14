@@ -1,0 +1,32 @@
+defaults:
+  - _self_
+  - config: img2img
+
+hydra:
+  run:
+    dir: ${config.output_dir}/${hydra:job.name}-${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+# overall settings, will be overwrited by the local settings
+config:
+  num_workers: 8
+  seed : False
+  batch_size: 8
+  microbatch: -1
+  ema_rate: "0.9999"
+  log_interval: 10
+  resume_checkpoint: ""
+  fp16_scale_growth: 1.0e-3
+  weight_decay: 0.0
+  save_interval: 10000
+  lr: 3.0e-5
+  schedule_sampler: "uniform"
+  num_samples: 50
+  save_img: True
+  save_dcm: False
+  model_path: "path"
+
+  job_name: ${hydra:job.name}
+  hydra_path: ${hydra:runtime.output_dir}
+  # sample_hydra_path: ${hydra:runtime.sample_out}
+  #
+  use_neptune: true # False

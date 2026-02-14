@@ -1,0 +1,93 @@
+name: 'clipae'
+tag: 'clipae with contrastive learning & auto-regression'
+#****** Data settings ******
+image_size: 128 # resize input images to this size
+# pad_channel: 16
+resize_size: [128,128,128]
+dataroot: "/path"   
+
+
+
+output_dir : "./logs/${config.name}"  # the traning logs saved
+
+CT_MEAN_STD: [0., 1.]
+XRAY1_MEAN_STD: [0., 1.]
+XRAY2_MEAN_STD: [0., 1.0]
+XRAY1_MIN_MAX: [0, 255]
+XRAY2_MIN_MAX: [0, 255]
+CT_MIN_MAX: [0, 2500]
+fine_size: 128
+fine_size_cond: 128 # ? X光的resize size改回128，这样才合理
+ct_channel: 128
+xray_channel: 1
+ 
+train_datasetfile: "./data/train.txt"
+val_datasetfile: "./data/test.txt"
+dis_datasetfile: "./data/dis.txt"
+cond_nums: [1]   #[1,2,3]
+cond_size: 256 # resize condition images to this size
+
+cond1_order: [0,1,2,3,4]
+cond2_order: [0,1,4,3,2]
+cond3_order: [0,1,4,2,3]
+
+# condloss_ratio: 100000.0  # aeloss的数量级是1e5
+
+cond_loss_ratio: 1.e4
+nll_loss_ratio: 1.0
+kl_loss_ratio: 1.e-2
+
+# cond_type: 'add' # 'add' or 'cat'
+cond_type: 'add' # 'add' or 'cat'
+
+cond_model_config:
+  patch_size: 16
+  embed_dim: 256
+  num_heads: 8
+  depth: 16
+
+ae_ckpt: "path"
+
+model:
+  base_learning_rate: 3e-5  #zhougu 0.00001 others: 0.0001
+  sync_dist: True
+  # params:
+  monitor: "val/cliploss"
+  embed_dim: 4
+  lossconfig:
+    # target: ldm.modules.losses.LPIPSWithDiscriminator
+    # params:
+    disc_start: 10000
+    kl_weight: 1.0e-4
+    disc_weight: 0.5
+    highlow_weight: 0
+    high_limit: 0.04
+    low_limit: 0.04
+    disc_in_channels: 1
+    perceptual_weight: 0
+
+  ddconfig:
+    double_z: True
+    z_channels: 4
+    resolution: 128
+    in_channels: 1
+    out_ch: 1
+    ch: 32 # !
+    # ch: 16
+    ch_mult: [1,2,4,8]  # num_down = len(ch_mult)-1  #[1,2,2,2,4]  [1,2,4,4] # !
+    # ch_mult: [1,1,2,4]  # num_down = len(ch_mult)-1  #[1,2,2,2,4]  [1,2,4,4]
+    num_res_blocks: 2
+    attn_resolutions: []
+    dropout: 0.0
+
+trainer:
+  benchmark: True
+  # accumulate_grad_batches: 4
+  # devices: [1]
+  check_val_every_n_epoch: 10
+  devices: [2]
+  accelerator: "auto"
+  max_epochs: 1000
+  fast_dev_run: False
+  strategy: "ddp_find_unused_parameters_true"
+  precision: "bf16-mixed"
