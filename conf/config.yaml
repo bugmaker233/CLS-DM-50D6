@@ -1,6 +1,6 @@
 defaults:
   - _self_
-  - config: img2img
+  - config: autoencoder
 
 hydra:
   run:
@@ -29,4 +29,4 @@ config:
   hydra_path: ${hydra:runtime.output_dir}
   # sample_hydra_path: ${hydra:runtime.sample_out}
   #
-  use_neptune: true # False
+  use_neptune: false

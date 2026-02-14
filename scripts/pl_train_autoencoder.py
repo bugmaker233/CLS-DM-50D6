@@ -15,6 +15,7 @@ from lightning.pytorch.callbacks import ModelCheckpoint
 from dataset.monai_nii_dataset import prepare_dataset
 from dataset.monai_nii_dataset1 import AlignDataSet
 from lightning.pytorch.strategies import DDPStrategy
+from omegaconf import OmegaConf
 
 # torch.set_float32_matmul_precision("high")  
 
@@ -67,11 +68,15 @@ def train(config):
     model = AutoencoderKL(save_path=config.hydra_path, config=config, **config["model"])
 
     # * trainer fit
+    trainer_kwargs = OmegaConf.to_container(config["trainer"], resolve=True)
+    devices = trainer_kwargs.get("devices")
+    if isinstance(devices, list) and len(devices) > 1:
+        trainer_kwargs["strategy"] = DDPStrategy(find_unused_parameters=True)
+
     trainer = pl.Trainer(
-        **config["trainer"],
+        **trainer_kwargs,
         callbacks=[checkpoint_callback, checkpoint_callback_latest],
         default_root_dir=config.hydra_path,
-        strategy=DDPStrategy(find_unused_parameters=True)
     )
     trainer.fit(model=model, train_dataloaders=train_dl, val_dataloaders=val_dl)
 

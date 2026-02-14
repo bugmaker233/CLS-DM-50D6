@@ -3,7 +3,23 @@ name: 'autoencoder'
 image_size: 128 # resize input images to this size
 # pad_channel: 16
 resize_size: [128,128,128]
-dataroot: "path"
+dataroot: "/root/data1/CTSpine1K/mid_h5"
+
+CT_MEAN_STD: [0.0, 1.0]
+XRAY1_MEAN_STD: [0.0, 1.0]
+XRAY2_MEAN_STD: [0.0, 1.0]
+XRAY1_MIN_MAX: [0, 255]
+XRAY2_MIN_MAX: [0, 255]
+CT_MIN_MAX: [0, 2500]
+
+fine_size: 128
+fine_size_cond: 128
+ct_channel: 128
+xray_channel: 1
+
+train_datasetfile: "./data/train.txt"
+val_datasetfile: "./data/test.txt"
+dis_datasetfile: "./data/dis.txt"
 
 
 
@@ -42,9 +58,9 @@ model:
 trainer:
   benchmark: True
   # accumulate_grad_batches: 2
-  # devices: [1]
+  # single-GPU default; override at runtime as needed
   devices: [0]
   accelerator: "auto"
   max_epochs: 1000
   fast_dev_run: False
-  # strategy: "ddp_find_unused_parameters_true"
+  precision: "bf16-mixed"
