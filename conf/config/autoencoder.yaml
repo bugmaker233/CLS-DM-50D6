@@ -26,7 +26,7 @@ dis_datasetfile: "./data/dis.txt"
 output_dir : "./logs/${config.name}"  # the traning logs saved
   
 model:
-  base_learning_rate: 5.0e-5  # conservative default for 1x4090 with bs=1
+  base_learning_rate: 1.0e-4
   sync_dist: True
   # params:
   monitor: "val/rec_loss"
@@ -63,4 +63,4 @@ trainer:
   accelerator: "auto"
   max_epochs: 1000
   fast_dev_run: False
-  precision: "bf16-mixed"
+  precision: "32"
