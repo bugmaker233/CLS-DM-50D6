@@ -141,31 +141,11 @@ class AutoencoderKL(pl.LightningModule):
         self.log_dict(log_dict_disc, prog_bar=False, logger=True, on_step=True, on_epoch=False, sync_dist=self.sync_dist)
 
     def validation_step(self, batch, batch_idx):
-        if self.current_epoch % 10 == 0:
-            inputs = batch["image"]
-            # print(inputs.shape)
-            reconstructions, posterior = self(inputs)
+        inputs = batch["image"]
+        reconstructions, _ = self(inputs)
+        rec_loss = F.mse_loss(reconstructions, inputs)
 
-            # reconstructions = torch.clamp(reconstructions, min=-1, max=1)
-            # reconstructions = (reconstructions + 1) * 127.5
-
-            # inputs = torch.clamp(inputs, min=-1, max=1)
-            # inputs = (inputs + 1) * 127.5
-
-            rec_loss = F.mse_loss(reconstructions, inputs)
-
-            # reconstructions = reconstructions.squeeze(0).permute(1, 0, 2, 3)
-            # reconstructions = reconstructions.type(torch.uint8)
-            # grid = torchvision.utils.make_grid(reconstructions)
-            # self.logger.experiment.add_image("val_images", grid, self.global_step)
-
-            # inputs = inputs.type(torch.uint8)
-            # inputs = inputs.squeeze(0).permute(1, 0, 2, 3)
-            # inputs = inputs.type(torch.uint8)
-            # grid = torchvision.utils.make_grid(inputs)
-            # self.logger.experiment.add_image("val_inputs", grid, self.global_step)
-
-            self.log("val/rec_loss", rec_loss, sync_dist=self.sync_dist)
+        self.log("val/rec_loss", rec_loss, on_step=False, on_epoch=True, sync_dist=self.sync_dist)
 
     def img_saver(self, img, post_fix, i_type=".nii", meta_data=None, filename=None, **kwargs):
         """
