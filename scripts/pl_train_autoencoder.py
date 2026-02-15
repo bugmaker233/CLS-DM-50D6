@@ -35,6 +35,13 @@ def train(config):
         dirpath=config.hydra_path,
         filename="latest",
     )
+    checkpoint_callback_every_10_epochs = ModelCheckpoint(
+        dirpath=config.hydra_path,
+        filename="epoch{epoch:03d}",
+        every_n_epochs=10,
+        save_top_k=-1,
+        auto_insert_metric_name=False,
+    )
     train_ds = AlignDataSet(config,split = "train")
     train_dl = DataLoader(
         dataset=train_ds,
@@ -75,7 +82,7 @@ def train(config):
 
     trainer = pl.Trainer(
         **trainer_kwargs,
-        callbacks=[checkpoint_callback, checkpoint_callback_latest],
+        callbacks=[checkpoint_callback, checkpoint_callback_latest, checkpoint_callback_every_10_epochs],
         default_root_dir=config.hydra_path,
     )
     trainer.fit(model=model, train_dataloaders=train_dl, val_dataloaders=val_dl)
