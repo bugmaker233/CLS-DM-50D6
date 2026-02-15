@@ -10,7 +10,7 @@ XRAY1_MEAN_STD: [0.0, 1.0]
 XRAY2_MEAN_STD: [0.0, 1.0]
 XRAY1_MIN_MAX: [0, 255]
 XRAY2_MIN_MAX: [0, 255]
-CT_MIN_MAX: [0, 2500]
+CT_MIN_MAX: [0, 255]
 
 fine_size: 128
 fine_size_cond: 128
