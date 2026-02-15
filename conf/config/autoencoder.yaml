@@ -57,6 +57,7 @@ model:
 
 trainer:
   benchmark: True
+  accumulate_grad_batches: 1
   # single-GPU default; override at runtime as needed
   devices: [0]
   accelerator: "auto"
