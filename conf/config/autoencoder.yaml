@@ -3,14 +3,14 @@ name: 'autoencoder'
 image_size: 128 # resize input images to this size
 # pad_channel: 16
 resize_size: [128,128,128]
-dataroot: "/root/data1/CTSpine1K/mid_h5"
+dataroot: "/root/data1/CTSpine1K/mid_h5_new"
 
 CT_MEAN_STD: [0.0, 1.0]
 XRAY1_MEAN_STD: [0.0, 1.0]
 XRAY2_MEAN_STD: [0.0, 1.0]
 XRAY1_MIN_MAX: [0, 255]
 XRAY2_MIN_MAX: [0, 255]
-CT_MIN_MAX: [0, 255]
+CT_MIN_MAX: [-500, 2000]
 
 fine_size: 128
 fine_size_cond: 128

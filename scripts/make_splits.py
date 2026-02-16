@@ -10,7 +10,7 @@ def parse_args():
     parser.add_argument(
         "--dataroot",
         type=Path,
-        default=Path("/root/data1/CTSpine1K/mid_h5"),
+        default=Path("/root/data1/CTSpine1K/mid_h5_new"),
         help="Dataset root directory.",
     )
     parser.add_argument(
