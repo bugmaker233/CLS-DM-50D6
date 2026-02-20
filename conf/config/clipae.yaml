@@ -4,7 +4,7 @@ tag: 'clipae with contrastive learning & auto-regression'
 image_size: 128 # resize input images to this size
 # pad_channel: 16
 resize_size: [128,128,128]
-dataroot: "/path"   
+dataroot: "/root/data1/CTSpine1K/mid_h5_new"   
 
 
 
@@ -46,7 +46,7 @@ cond_model_config:
   num_heads: 8
   depth: 16
 
-ae_ckpt: "path"
+ae_ckpt: "/root/data1/CLS-DM-50D6/logs/autoencoder/pl_train_autoencoder-2026-02-16/22-05-53/latest.ckpt"
 
 model:
   base_learning_rate: 3e-5  #zhougu 0.00001 others: 0.0001

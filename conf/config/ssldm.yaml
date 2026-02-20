@@ -5,8 +5,8 @@ image_size: 128 # resize input images to this size
 resize_size: [128,128,128]
 # img_resize_size: [256,256] 
 img_resize_size: [128,128] # ? X光的resize size改回128，这样才合理
-data_path: "/path"   #feijiejie
-dataroot: "/path"   #feijiejie
+data_path: "/root/data1/CTSpine1K/mid_h5_new"   #feijiejie
+dataroot: "/root/data1/CTSpine1K/mid_h5_new"   #feijiejie
 CT_MEAN_STD: [0., 1.]
 XRAY1_MEAN_STD: [0., 1.]
 XRAY2_MEAN_STD: [0., 1.0]
@@ -83,7 +83,7 @@ latent_diffusion:
       num_heads: 8
       depth: 16
     
-    ae_ckpt: "path"
+    ae_ckpt: "/root/data1/CLS-DM-50D6/logs/autoencoder/pl_train_autoencoder-2026-02-16/22-05-53/latest.ckpt"
     clipae_ckpt: "path"
 
     model:
@@ -160,4 +160,3 @@ trainer:
   check_val_every_n_epoch: 10
   # strategy: "ddp_find_unused_parameters_true"
   # fast_dev_run: true
-
