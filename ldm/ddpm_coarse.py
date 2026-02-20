@@ -1,0 +1,61 @@
+import torch
+
+from .coarse_conditioner import CoarseConditioner
+from .ddpm import LatentDiffusion, disabled_train
+
+
+class LatentDiffusionCoarse(LatentDiffusion):
+    def instantiate_first_stage_and_cond_stage(self, config, global_config):
+        cond_flag = str(getattr(global_config, "cond_flag", ""))
+        if cond_flag != "coarse":
+            return super().instantiate_first_stage_and_cond_stage(config, global_config)
+
+        model = CoarseConditioner(save_path=self.config.hydra_path, config=config)
+        ckpt_path = str(getattr(config, "coarsecond_ckpt", ""))
+        if ckpt_path and ckpt_path != "path":
+            model.init_from_ckpt(ckpt_path)
+        self.first_stage_model = model.eval()
+        self.first_stage_model.train = disabled_train
+        for p in self.first_stage_model.parameters():
+            p.requires_grad = False
+
+    @torch.no_grad()
+    def get_input(
+        self,
+        batch,
+        k,
+        return_first_stage_outputs=False,
+        force_c_encode=False,
+        cond_key=None,
+        return_original_cond=False,
+        bs=None,
+    ):
+        x = torch.as_tensor(batch["image"])
+        if bs is not None:
+            x = x[:bs]
+        x = x.to(self.device)
+
+        encoder_posterior = self.encode_first_stage(x)
+        z = self.get_first_stage_encoding(encoder_posterior).detach()
+
+        c = self.first_stage_model.encode_condition_from_batch(batch, device=self.device, sample=False).detach()
+        if bs is not None:
+            c = c[:bs]
+
+        out = [z, c]
+        if return_first_stage_outputs:
+            xrec = self.decode_first_stage(z)
+            out.extend([x, xrec])
+
+        if return_original_cond:
+            cond1 = torch.as_tensor(batch["cond1"]) if "cond1" in batch else None
+            cond2 = torch.as_tensor(batch["cond2"]) if "cond2" in batch else None
+            cond3 = torch.as_tensor(batch["cond3"]) if "cond3" in batch else None
+            if bs is not None:
+                cond1 = cond1[:bs] if cond1 is not None else None
+                cond2 = cond2[:bs] if cond2 is not None else None
+                cond3 = cond3[:bs] if cond3 is not None else None
+            out.extend([cond1, cond2, cond3])
+
+        return out
+
