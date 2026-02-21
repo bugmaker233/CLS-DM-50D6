@@ -5,6 +5,19 @@ from .ddpm import LatentDiffusion, disabled_train
 
 
 class LatentDiffusionCoarse(LatentDiffusion):
+    def get_first_stage_encoding(self, encoder_posterior):
+        try:
+            return super().get_first_stage_encoding(encoder_posterior)
+        except NotImplementedError:
+            # Compatibility fallback: class identity may differ across module paths.
+            if hasattr(encoder_posterior, "sample"):
+                z = encoder_posterior.sample()
+            elif torch.is_tensor(encoder_posterior):
+                z = encoder_posterior
+            else:
+                raise
+            return self.scale_factor * z
+
     def instantiate_first_stage_and_cond_stage(self, config, global_config):
         cond_flag = str(getattr(global_config, "cond_flag", ""))
         if cond_flag != "coarse":
