@@ -65,7 +65,7 @@ latent_diffusion:
       depth_bins: 16
 
     ae_ckpt: "/root/data1/CLS-DM-50D6/logs/autoencoder/pl_train_autoencoder-2026-02-16/22-05-53/latest.ckpt"
-    coarsecond_ckpt: "path"
+    coarsecond_ckpt: "/root/data1/CLS-DM-50D6/logs/coarsecond/pl_train_coarsecond-2026-02-20/16-17-40/latest.ckpt"
 
     model:
       base_learning_rate: 3.0e-5
@@ -124,4 +124,3 @@ trainer:
   max_epochs: 1000
   precision: "bf16-mixed"
   check_val_every_n_epoch: 10
-
