@@ -36,7 +36,17 @@ class LatentDiffusionCoarse(LatentDiffusion):
         x = x.to(self.device)
 
         encoder_posterior = self.encode_first_stage(x)
-        z = self.get_first_stage_encoding(encoder_posterior).detach()
+        try:
+            z = self.get_first_stage_encoding(encoder_posterior).detach()
+        except NotImplementedError:
+            # Compatibility fallback: some runs load the Gaussian posterior class
+            # from a different module path, making isinstance checks fail.
+            if hasattr(encoder_posterior, "sample"):
+                z = (self.scale_factor * encoder_posterior.sample()).detach()
+            elif torch.is_tensor(encoder_posterior):
+                z = (self.scale_factor * encoder_posterior).detach()
+            else:
+                raise
 
         c = self.first_stage_model.encode_condition_from_batch(batch, device=self.device, sample=False).detach()
         if bs is not None:
@@ -58,4 +68,3 @@ class LatentDiffusionCoarse(LatentDiffusion):
             out.extend([cond1, cond2, cond3])
 
         return out
-
