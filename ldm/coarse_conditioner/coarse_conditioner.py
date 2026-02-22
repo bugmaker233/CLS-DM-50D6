@@ -39,6 +39,9 @@ class CoarseConditioner(pl.LightningModule):
         self.weight_temperature = float(getattr(config, "weight_temperature", 1.0))
         self.weight_smooth_ratio = float(getattr(config, "weight_smooth_ratio", 0.0))
         self.weight_sparse_ratio = float(getattr(config, "weight_sparse_ratio", 0.0))
+        self.weight_floor = float(getattr(config, "weight_floor", 0.1))
+        self.weight_sum_target = float(getattr(config, "weight_sum_target", 1.0))
+        self.weight_sum_ratio = float(getattr(config, "weight_sum_ratio", 0.0))
 
         self.target_depth = int(config.ct_channel)
         self.target_hw = int(config.fine_size)
@@ -159,9 +162,10 @@ class CoarseConditioner(pl.LightningModule):
 
     def _pixel_weight(self, cond):
         logits = self.weight_net(cond)
-        # Independent gate per view/channel. This removes the sum-to-one constraint
-        # and allows jointly suppressing non-spine regions.
-        weights = torch.sigmoid(logits / max(self.weight_temperature, 1e-6))
+        # Independent attention gate with a floor to avoid all-zero collapse.
+        gate = torch.sigmoid(logits / max(self.weight_temperature, 1e-6))
+        floor = max(min(self.weight_floor, 0.99), 0.0)
+        weights = floor + (1.0 - floor) * gate
         weighted = cond * weights
         return weighted, weights
 
@@ -211,7 +215,13 @@ class CoarseConditioner(pl.LightningModule):
         voxel_loss = self._voxel_recon_loss(coarse, target)
         smooth_loss = self._smoothness_loss(weights)
         sparse_loss = weights.mean()
-        loss = voxel_loss + self.weight_smooth_ratio * smooth_loss + self.weight_sparse_ratio * sparse_loss
+        sum_loss = torch.abs(weights.sum(dim=1) - self.weight_sum_target).mean()
+        loss = (
+            voxel_loss
+            + self.weight_smooth_ratio * smooth_loss
+            + self.weight_sparse_ratio * sparse_loss
+            + self.weight_sum_ratio * sum_loss
+        )
 
         self.log(f"{stage}/loss", loss, prog_bar=True, logger=True, on_step=(stage == "train"), on_epoch=True, sync_dist=self.sync_dist)
         self.log(
@@ -244,6 +254,15 @@ class CoarseConditioner(pl.LightningModule):
         self.log(
             f"{stage}/weight_sparse",
             sparse_loss,
+            prog_bar=False,
+            logger=True,
+            on_step=False,
+            on_epoch=True,
+            sync_dist=self.sync_dist,
+        )
+        self.log(
+            f"{stage}/weight_sum_loss",
+            sum_loss,
             prog_bar=False,
             logger=True,
             on_step=False,
