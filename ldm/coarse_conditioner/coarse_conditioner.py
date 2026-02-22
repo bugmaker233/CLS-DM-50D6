@@ -38,6 +38,7 @@ class CoarseConditioner(pl.LightningModule):
         self.voxel_loss = str(getattr(config, "voxel_loss", "l1")).lower()
         self.weight_temperature = float(getattr(config, "weight_temperature", 1.0))
         self.weight_smooth_ratio = float(getattr(config, "weight_smooth_ratio", 0.0))
+        self.weight_sparse_ratio = float(getattr(config, "weight_sparse_ratio", 0.0))
 
         self.target_depth = int(config.ct_channel)
         self.target_hw = int(config.fine_size)
@@ -158,7 +159,9 @@ class CoarseConditioner(pl.LightningModule):
 
     def _pixel_weight(self, cond):
         logits = self.weight_net(cond)
-        weights = torch.softmax(logits / max(self.weight_temperature, 1e-6), dim=1)
+        # Independent gate per view/channel. This removes the sum-to-one constraint
+        # and allows jointly suppressing non-spine regions.
+        weights = torch.sigmoid(logits / max(self.weight_temperature, 1e-6))
         weighted = cond * weights
         return weighted, weights
 
@@ -207,7 +210,8 @@ class CoarseConditioner(pl.LightningModule):
 
         voxel_loss = self._voxel_recon_loss(coarse, target)
         smooth_loss = self._smoothness_loss(weights)
-        loss = voxel_loss + self.weight_smooth_ratio * smooth_loss
+        sparse_loss = weights.mean()
+        loss = voxel_loss + self.weight_smooth_ratio * smooth_loss + self.weight_sparse_ratio * sparse_loss
 
         self.log(f"{stage}/loss", loss, prog_bar=True, logger=True, on_step=(stage == "train"), on_epoch=True, sync_dist=self.sync_dist)
         self.log(
@@ -231,6 +235,24 @@ class CoarseConditioner(pl.LightningModule):
         self.log(
             f"{stage}/weight_mean",
             weights.mean(),
+            prog_bar=False,
+            logger=True,
+            on_step=False,
+            on_epoch=True,
+            sync_dist=self.sync_dist,
+        )
+        self.log(
+            f"{stage}/weight_sparse",
+            sparse_loss,
+            prog_bar=False,
+            logger=True,
+            on_step=False,
+            on_epoch=True,
+            sync_dist=self.sync_dist,
+        )
+        self.log(
+            f"{stage}/weight_sum_mean",
+            weights.sum(dim=1).mean(),
             prog_bar=False,
             logger=True,
             on_step=False,

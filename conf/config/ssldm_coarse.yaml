@@ -58,6 +58,7 @@ latent_diffusion:
     voxel_loss: "l1"
     weight_temperature: 1.0
     weight_smooth_ratio: 0.0
+    weight_sparse_ratio: 1.0e-3
     coarse_model:
       base_channels: 32
       fusion_channels: 128
